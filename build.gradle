@@ -1,0 +1,128 @@
+/**
+ * @author bush
+ *
+ * increment this counter every time you try to switch this to kotlin and fail
+ * counter = 2
+ */
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://maven.minecraftforge.net/' }
+        maven { url 'https://repo.spongepowered.org/maven/' }
+    }
+    dependencies {
+        classpath "net.minecraftforge.gradle:ForgeGradle:$forgegradleversion"
+        classpath "org.spongepowered:mixingradle:$mixinversion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinversion"
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'kotlin'
+apply plugin: 'java'
+apply plugin: 'idea'
+
+archivesBaseName = modname
+version = modversion
+group = modgroup
+
+compileJava {
+    // So unicode stuff doesn't get converted into other characters
+    options.encoding 'UTF-8'
+    // Suppress sun.misc.Unsafe warnings
+    options.compilerArgs += '-XDignore.symbol.file'
+    sourceCompatibility = targetCompatibility = '1.8'
+}
+
+compileKotlin.kotlinOptions.freeCompilerArgs += '-Xlambdas=indy'
+
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://repo.spongepowered.org/maven' }
+}
+
+minecraft {
+    mappings channel: "$mappingschannel", version: "$mappingsversion"
+    // AT config because mixin ats suck ass
+    accessTransformer = file(transformerpath + accesstransformer)
+    runs {
+        client {
+            workingDirectory file('run')
+            // Tells mixin to use our mixin config in IDE's.
+            property 'fml.coreMods.load', mixinclass
+        }
+    }
+}
+
+configurations {
+    // Create new configuration
+    godblessamerica
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:$mcforgeversion"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    godblessamerica 'org.spongepowered:mixin:0.8.5'
+
+    // Apparently future crashes with v10
+    godblessamerica 'org.reflections:reflections:0.9.12'
+    godblessamerica 'club.minnced:java-discord-rpc:2.0.2'
+    godblessamerica 'com.github.therealbush:translator:1.0.2'
+    godblessamerica('com.github.therealbush:eventbus-kotlin:v1.0.1') {
+        // Included in minecraft, we don't need it in our jar
+        exclude module: "log4j-api"
+        exclude module: 'log4j-core'
+    }
+
+    godblessamerica "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinversion"
+    godblessamerica "org.jetbrains.kotlin:kotlin-reflect:$kotlinversion"
+    godblessamerica "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesversion"
+
+    // Implement everything from our configuration
+    implementation configurations.godblessamerica
+}
+
+mixin {
+    // Types of obf env: searge, notch.
+    defaultObfuscationEnv 'searge'
+    sourceSets {
+        main {
+            ext.refMap = mixinrefmapconfig
+        }
+    }
+}
+
+processResources {
+    // Replace the version in mcmod.info
+    inputs.property 'version', version
+    from(sourceSets.main.resources.srcDirs) {
+        duplicatesStrategy DuplicatesStrategy.WARN
+        include 'mcmod.info'
+        expand version: version
+    }
+}
+
+jar {
+    manifest.attributes(
+            'Main-Class': mainclass,
+            'ForceLoadAsMod': 'true',
+            'FMLAT': accesstransformer,
+            'MixinConfigs': mixinconfig,
+            'FMLCorePlugin': mixinclass,
+            'FMLCorePluginContainsFMLMod': 'true',
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
+    )
+    from {
+        duplicatesStrategy DuplicatesStrategy.WARN
+        // Exclude files specified in gradle.properties
+        exclude excluded.split(',')
+        // Put everything from our configuration into our built jar
+        configurations.godblessamerica.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}

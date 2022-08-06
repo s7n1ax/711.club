@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "package": "me.bush.cornerstore.mixin",
+  "refmap": "mixins.cornerstore.refmap.json",
+  "minVersion": "0.7.11",
+  "mixinPriority": 711711711,
+  "mixins": [
+    "MixinBlockLiquid",
+    "MixinEntityLivingBase",
+    "MixinEntityPlayerSP",
+    "MixinEntityRenderer",
+    "MixinFontRenderer",
+    "MixinMinecraft",
+    "MixinNetworkManager",
+    "MixinRenderGlobal",
+    "MixinWorld",
+    "MixinItemRenderer",
+    "MixinRenderItem",
+    "MixinGuiMainMenu"
+  ]
+}

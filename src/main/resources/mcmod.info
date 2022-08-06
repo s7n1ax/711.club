@@ -1,0 +1,14 @@
+[
+  {
+    "modid": "cornerstore",
+    "name": "711.CLUB",
+    "description": "Best Client Ever.",
+    "version": "${version}",
+    "mcversion": "1.12.2",
+    "logoFile": "cornerstore.png",
+    "url": "https://discord.gg/jfQgBdEaDS",
+    "authorList": [
+      "Bush, perry."
+    ]
+  }
+]
